@@ -9,7 +9,7 @@ async function readContacts() {
   return JSON.parse(data);
 }
 async function writeContacts(contacts) {
-  await fs.writeFile(contactsPath, JSON.stringify(contacts));
+  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
 }
 
 async function listContacts() {
@@ -20,17 +20,17 @@ async function listContacts() {
 async function getContactById(contactId) {
   const contacts = await readContacts();
   const contact = contacts.find((contact) => contact.id === contactId);
-  return contact;
+  return contact || null;
 }
 
 async function addContact(name, email, phone) {
   const contacts = await readContacts();
 
   const contact = {
+    id: crypto.randomUUID(),
     name,
     email,
     phone,
-    id: crypto.randomUUID(),
   };
 
   contacts.push(contact);
@@ -38,7 +38,16 @@ async function addContact(name, email, phone) {
   await writeContacts(contacts);
   return contact;
 }
-function removeContact(contactId) {}
+async function removeContact(contactId) {
+  const contacts = await readContacts();
+  const index = contacts.findIndex((contact) => contact.id === contactId);
+  const newContacts = [
+    ...contacts.slice(0, index),
+    ...contacts.slice(index + 1),
+  ];
+  await writeContacts(newContacts);
+  return "Success removing";
+}
 
 module.exports = {
   listContacts,
